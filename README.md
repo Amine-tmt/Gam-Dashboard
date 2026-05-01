@@ -46,29 +46,6 @@ ouvrez le dossier `gam-dashboard`, puis cliquez sur **Go Live**.
 npx serve gam-dashboard
 ```
 
-## Ajouter le logo GAM
-
-**Option 1 — Glisser-déposer :**
-Glissez votre fichier logo directement sur le carré "GAM" en haut à gauche.
-
-**Option 2 — Cliquer :**
-Cliquez sur le carré "GAM" pour ouvrir le sélecteur de fichier.
-
-**Option 3 — Permanent (modifier le code) :**
-Dans `index.html`, remplacez :
-```html
-<div class="logo-icon-box" id="logo-drop">
-  <span id="logo-letters">GAM</span>
-</div>
-```
-Par :
-```html
-<div class="logo-icon-box" id="logo-drop">
-  <img src="assets/gam-logo.png" alt="GAM">
-</div>
-```
-Et placez votre logo dans `assets/gam-logo.png`.
-
 ## Technologies utilisées
 
 - **Leaflet.js** — Carte interactive
