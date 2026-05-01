@@ -35,7 +35,7 @@ function loadData() {
       reject(new Error('Timeout: le fichier CSV n\'a pas pu être chargé dans les délais'));
     }, 10000); // 10 second timeout
 
-    fetch('./data/Final_dataset.csv')
+    fetch('data/Final_dataset.csv')
       .then(response => {
         clearTimeout(timeout);
         if (!response.ok) throw new Error('Fichier introuvable (' + response.status + ')');
