@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAM Assurance — Expansion Commerciale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav id="topnav">
+  <div class="logo-area">
+    <div class="logo-icon-box" id="logo-drop" title="Glissez le logo GAM ici">
+      <img id="logo-img" src="images/GAM_logo.png" alt="GAM Logo" style="width:100%;height:100%;object-fit:contain;border-radius:6px">
+    </div>
+    <div class="logo-text">
+      <div class="logo-name">GAM Assurance</div>
+      <div class="logo-sub">Expansion Commerciale</div>
+    </div>
+  </div>
+  <div class="nav-divider"></div>
+  <button class="tab-btn active" onclick="showTab(1)" id="tabBtn1"><img src="images/carte_icon.png" alt="Carte" class="tab-icon"> Carte</button>
+  <button class="tab-btn" onclick="showTab(2)" id="tabBtn2"><img src="images/classement_icon.png" alt="Classements" class="tab-icon"> Classements</button>
+  <button class="tab-btn" onclick="showTab(3)" id="tabBtn3"><img src="images/scorcard_icon.png" alt="Scorecard" class="tab-icon"> Scorecard</button>
+  <button class="tab-btn" onclick="showTab(4)" id="tabBtn4"><img src="images/analytics_icon.png" alt="Analytiques" class="tab-icon"> Analytiques</button>
+  <button class="tab-btn" onclick="showTab(5)" id="tabBtn5"><img src="images/planificateur_icon.png" alt="Planificateur" class="tab-icon"> Planificateur</button>
+</nav>
+
+<!-- KPI BAR -->
+<div id="kpibar">
+  <div class="kpi"><div class="kpi-label">Communes analysées</div><div class="kpi-value" id="k-total">—</div></div>
+  <div class="kpi"><div class="kpi-label">Sans agence GAM</div><div class="kpi-value" id="k-nogam">—</div></div>
+  <div class="kpi"><div class="kpi-label">Meilleure commune</div><div class="kpi-value green" id="k-top">—</div></div>
+  <div class="kpi"><div class="kpi-label">Potentiel total marché</div><div class="kpi-value yellow" id="k-rev">—</div></div>
+  <div class="kpi"><div class="kpi-label">Score IA moyen</div><div class="kpi-value" id="k-score">—</div></div>
+  <div class="kpi"><div class="kpi-label">Prob. succès moyenne</div><div class="kpi-value yellow" id="k-prob">—</div></div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loading-box">
+    <div class="loading-logo">GAM</div>
+    <div class="loading-text" id="loading-text">Chargement des données...</div>
+    <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+    <div class="loading-sub" id="loading-sub">Lecture du fichier CSV</div>
+  </div>
+</div>
+
+<!-- PAGES -->
+<div id="pages" style="display:none">
+
+  <!-- TAB 1: MAP -->
+  <div class="page active" id="tab1">
+    <div id="map-sidebar">
+      <div id="map-sidebar-inner">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Couches cartographiques</div>
+          <div class="layer-grid">
+            <button class="layer-btn active" onclick="setLayer('score',this)">Score IA</button>
+            <button class="layer-btn" onclick="setLayer('population',this)">Population</button>
+            <button class="layer-btn" onclick="setLayer('revenue',this)">Revenus</button>
+            <button class="layer-btn" onclick="setLayer('competitors',this)">Concurrents</button>
+            <button class="layer-btn" onclick="setLayer('industrial',this)">Zones Ind.</button>
+            <button class="layer-btn" onclick="setLayer('seismic',this)">Sismique</button>
+            <button class="layer-btn" onclick="setLayer('gam',this)">Couv. GAM</button>
+            <button class="layer-btn" onclick="setLayer('deficit',this)">Déficit</button>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">Filtres</div>
+          <div class="filter-row">
+            <div class="filter-label"><span>Wilaya</span></div>
+            <select id="f-wilaya" onchange="applyFilters()"><option value="">Toutes les wilayas</option></select>
+          </div>
+          <div class="filter-row">
+            <div class="filter-label"><span>Score IA minimum</span><span id="f-score-val" class="filter-val">0</span></div>
+            <input type="range" id="f-score" min="0" max="100" value="0" oninput="document.getElementById('f-score-val').textContent=this.value;applyFilters()">
+          </div>
+          <div class="filter-row">
+            <div class="filter-label"><span>Population minimum</span><span id="f-pop-val" class="filter-val">0</span></div>
+            <input type="range" id="f-pop" min="0" max="500000" step="5000" value="0" oninput="document.getElementById('f-pop-val').textContent=Number(this.value).toLocaleString('fr');applyFilters()">
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Sans GAM uniquement</span>
+            <label class="toggle"><input type="checkbox" id="f-nogam" onchange="applyFilters()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Zones industrielles</span>
+            <label class="toggle"><input type="checkbox" id="f-industrial" onchange="applyFilters()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Risque sismique élevé</span>
+            <label class="toggle"><input type="checkbox" id="f-seismic" onchange="applyFilters()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="filter-row">
+            <div class="filter-label">Concurrents</div>
+            <select id="f-comp" onchange="applyFilters()">
+              <option value="">Tous</option>
+              <option value="0">Aucun concurrent</option>
+              <option value="1-3">1 à 3 concurrents</option>
+              <option value="4+">4 et plus</option>
+            </select>
+          </div>
+          <button class="btn" style="width:100%;margin-top:6px;font-size:11px" onclick="resetFilters()">Réinitialiser les filtres</button>
+        </div>
+      </div>
+    </div>
+    <div id="map-container">
+      <button id="map-toggle-btn" onclick="toggleSidebar()">‹</button>
+      <div id="map-count-badge">Affichage : <span id="map-count">—</span> communes</div>
+      <div id="map"></div>
+      <div id="map-legend">
+        <div id="map-legend-title">Score IA</div>
+        <div id="map-legend-items"></div>
+      </div>
+      <div id="map-scorecard">
+        <button class="sc-close-btn" onclick="closeMapScorecard()">✕</button>
+        <div id="map-sc-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: RANKINGS -->
+  <div class="page" id="tab2">
+    <div class="table-controls">
+      <input class="search-box" id="tbl-search" placeholder="Rechercher commune ou wilaya..." oninput="filterTable()">
+      <select class="btn" id="tbl-wilaya" onchange="filterTable()" style="min-width:155px"><option value="">Toutes les wilayas</option></select>
+      <select class="btn" id="tbl-perpage" onchange="changePerPage()" style="min-width:95px">
+        <option value="25">25 / page</option>
+        <option value="50">50 / page</option>
+        <option value="100">100 / page</option>
+      </select>
+      <button class="btn primary" onclick="exportCSV()">Exporter CSV</button>
+    </div>
+    <div id="rankings-table-wrap">
+      <table class="rtable" id="rtable">
+        <thead><tr>
+          <th onclick="sortTable('Rank_National')">Rang Nat.</th>
+          <th onclick="sortTable('Rank_Wilaya')">Rang W.</th>
+          <th onclick="sortTable('Commune')">Commune</th>
+          <th onclick="sortTable('Wilaya')">Wilaya</th>
+          <th onclick="sortTable('Statut')">Statut</th>
+          <th onclick="sortTable('Score_IA_Predictif')">Score IA</th>
+          <th onclick="sortTable('Probabilite_Succes_%')">Prob. %</th>
+          <th onclick="sortTable('Chiffre_Affaires_Potentiel_DA')">CA Potentiel</th>
+          <th onclick="sortTable('Pop_2026')">Pop. 2026</th>
+          <th onclick="sortTable('Nb_Agences_Concurrents_Total')">Conc.</th>
+          <th onclick="sortTable('Has_GAM')">GAM</th>
+          <th onclick="sortTable('Nb_Zones_Industrielles')">ZI</th>
+          <th onclick="sortTable('Zone_Sismique')">Sismique</th>
+        </tr></thead>
+        <tbody id="rtable-body"></tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SCORECARD -->
+  <div class="page" id="tab3">
+    <div class="scorecard-search-wrap">
+      <div class="autocomplete-wrap">
+        <input id="sc-search" placeholder="Rechercher une commune..." oninput="scSearch()" autocomplete="off">
+        <div id="sc-dropdown"></div>
+      </div>
+      <button class="btn" onclick="scRandom()">Aléatoire</button>
+    </div>
+    <div id="scorecard-content">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-text">Recherchez une commune</div>
+        <div class="empty-sub">Tapez un nom pour voir l'analyse complète</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: ANALYTICS -->
+  <div class="page" id="tab4">
+    <div class="analytics-grid">
+      <div class="chart-card"><div class="chart-title">Top 15 Wilayas — Score IA moyen</div><div class="chart-wrap"><canvas id="ch-wilayas"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Top 20 Communes nationales</div><div class="chart-wrap"><canvas id="ch-top20"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Distribution des Scores IA</div><div class="chart-wrap"><canvas id="ch-hist"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Parts de marché — Concurrents</div><div class="chart-wrap"><canvas id="ch-pie"></canvas></div></div>
+      <div class="chart-card full"><div class="chart-title">Déficit d'agences par Wilaya (Top 15)</div><div class="chart-wrap"><canvas id="ch-deficit"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Zones industrielles — Top 15 communes</div><div class="chart-wrap"><canvas id="ch-indus"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Marché sismique par Wilaya</div><div class="chart-wrap"><canvas id="ch-seismic"></canvas></div></div>
+      <div class="chart-card full"><div class="chart-title">CA Potentiel par Wilaya (Top 15)</div><div class="chart-wrap"><canvas id="ch-revenue"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- TAB 5: PLANNER -->
+  <div class="page" id="tab5">
+    <div id="planner-config">
+      <div>
+        <div class="config-title">Agences à ouvrir</div>
+        <input type="number" class="n-input" id="plan-n" min="1" max="20" value="5">
+      </div>
+      <div>
+        <div class="config-title">Critères d'optimisation</div>
+        <div class="criteria-info">
+          Score IA le plus élevé<br>
+          Aucune présence GAM actuelle<br>
+          CA potentiel maximisé<br>
+          Diversification géographique (max 2/wilaya)<br>
+          Population minimale &gt; 15 000 hab.
+        </div>
+      </div>
+      <button class="btn primary" onclick="buildPlan()" style="width:100%;padding:12px;font-size:14px;font-weight:700">Générer le plan optimal</button>
+      <div id="plan-kpis" class="plan-kpis" style="display:none">
+        <div class="plan-kpi"><div class="plan-kpi-label">Agences</div><div class="plan-kpi-val" id="pk-n">—</div></div>
+        <div class="plan-kpi"><div class="plan-kpi-label">CA Total</div><div class="plan-kpi-val" id="pk-rev">—</div></div>
+        <div class="plan-kpi"><div class="plan-kpi-label">Population</div><div class="plan-kpi-val" id="pk-pop">—</div></div>
+      </div>
+      <button class="btn" onclick="exportPlan()" id="plan-export-btn" style="display:none;width:100%;font-weight:700">Exporter le plan (CSV)</button>
+    </div>
+    <div id="planner-results">
+      <div id="planner-map"></div>
+      <div id="planner-list">
+        <div class="empty-state" style="padding:24px">
+          <div class="empty-text" style="font-size:14px">Cliquez sur "Générer le plan optimal"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pages -->
+
+<!-- External libraries -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<!-- App modules — order matters -->
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/table.js"></script>
+<script src="js/scorecard.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
